@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGULAS • Sistem Informasi Guru</title>
+  
+  <!-- ===== PWA META TAGS ===== -->
+  <meta name="theme-color" content="#1e4070">
+  <meta name="description" content="Sistem Informasi Guru - SIGULAS">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SIGULAS">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%231e4070'/%3E%3Ctext x='25' y='120' font-size='85' font-weight='bold' fill='white' font-family='Arial'%3ESG%3C/text%3E%3C/svg%3E">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href='data:application/json;charset=utf-8,{"name":"SIGULAS - Sistem Informasi Guru","short_name":"SIGULAS","description":"Sistem Informasi Guru","start_url":"./","display":"standalone","orientation":"portrait","background_color":"%231e4070","theme_color":"%231e4070","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 192 192%27%3E%3Crect width=%27192%27 height=%27192%27 fill=%27%231e4070%27/%3E%3Ctext x=%2725%27 y=%27130%27 font-size=%2795%27 font-weight=%27bold%27 fill=%27white%27 font-family=%27Arial%27%3ESG%3C/text%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 fill=%27%231e4070%27/%3E%3Ctext x=%2770%27 y=%27340%27 font-size=%27250%27 font-weight=%27bold%27 fill=%27white%27 font-family=%27Arial%27%3ESG%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    
+    body {
+      background: #f0f3f8 url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(240, 243, 248, 0.88); z-index: -1; }
+    
+    .app-container {
+      width: 100%;
+      max-width: 100%;
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(0,0,0,0.08);
+      min-height: 100vh;
+      padding: 16px;
+      position: relative;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0 16px;
+      border-bottom: 2px solid #eef2f7;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .app-title { font-size: 24px; font-weight: 800; color: #1e3a6f; letter-spacing: -0.5px; }
+    .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    
+    /* Tombol Install - default hidden, muncul saat PWA bisa diinstall */
+    .btn-install { 
+      background: #8e24aa; 
+      color: white; 
+      border: none; 
+      padding: 8px 16px; 
+      border-radius: 30px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      display: none;
+      align-items: center; 
+      gap: 6px; 
+      transition: 0.2s; 
+      box-shadow: 0 2px 8px rgba(142, 36, 170, 0.25); 
+      animation: pulseInstall 2s infinite;
+    }
+    .btn-install.show { display: flex; }
+    .btn-install:hover { background: #7b1fa2; transform: scale(1.05); }
+    .btn-install:active { transform: scale(0.97); }
+    
+    @keyframes pulseInstall {
+      0%, 100% { box-shadow: 0 2px 8px rgba(142, 36, 170, 0.25); }
+      50% { box-shadow: 0 2px 20px rgba(142, 36, 170, 0.6); }
+    }
+    
+    .btn-refresh { background: #eef2f7; color: #1e3a6f; border: none; padding: 8px 12px; border-radius: 30px; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
+    .btn-refresh:hover { background: #dce3ed; transform: scale(1.02); }
+    .btn-refresh:active { transform: scale(0.95); }
+    .btn-admin { background: #ffb74d; color: #1e3a6f; border: none; padding: 8px 12px; border-radius: 30px; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+    .btn-admin:hover { background: #ffa726; transform: scale(1.02); }
+    .btn-admin:active { transform: scale(0.95); }
+    .btn-admin.logged-in { background: #4caf50; color: white; }
+    .btn-admin.logged-in:hover { background: #388e3c; }
+
+    .hero-card {
+      background: linear-gradient(145deg, #1e3a6f, #16315a);
+      border-radius: 24px;
+      padding: 20px 18px;
+      margin: 18px 0 20px;
+      color: white;
+      box-shadow: 0 10px 20px -6px rgba(30, 58, 111, 0.3);
+    }
+    .hero-card .time-badge { font-size: 15px; font-weight: 700; background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; display: inline-block; margin-bottom: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.5px; backdrop-filter: blur(4px); }
+    .hero-card h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; margin-bottom: 4px; }
+    .hero-card p { font-size: 13px; opacity: 0.85; margin-bottom: 14px; font-weight: 400; }
+    .hero-card .btn-hero { background: #ffb74d; border: none; color: #1e3a6f; font-weight: 700; font-size: 15px; padding: 11px 22px; border-radius: 60px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 6px 14px rgba(255, 183, 77, 0.35); cursor: pointer; transition: 0.2s; text-decoration: none; }
+    .hero-card .btn-hero:hover { transform: scale(1.02); background: #ffa726; }
+    .hero-card .btn-hero:active { transform: scale(0.97); }
+
+    /* ===== MENU GRID ===== */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0 10px;
+    }
+    
+    /* ===== CARD MENU DENGAN WARNA BERAGAM ===== */
+    .menu-grid-item {
+      border-radius: 16px;
+      padding: 16px 6px 12px;
+      text-align: center;
+      border: 1px solid transparent;
+      border-left: 4px solid;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-height: 105px;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .menu-grid-item:hover { 
+      transform: translateY(-3px); 
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .menu-grid-item:active { transform: scale(0.96); }
+    
+    .menu-grid-item .icon-wrapper {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 2px;
+      transition: transform 0.2s;
+    }
+    .menu-grid-item:hover .icon-wrapper { transform: scale(1.1) rotate(-5deg); }
+    
+    .menu-grid-item .label { 
+      font-size: 11px; 
+      font-weight: 700; 
+      line-height: 1.3; 
+      word-break: break-word; 
+      max-width: 100%; 
+    }
+    .menu-grid-item .sub { 
+      font-size: 9px; 
+      font-weight: 500; 
+      margin-top: -2px; 
+      opacity: 0.8;
+    }
+    
+    /* ===== 8 VARIASI WARNA CARD ===== */
+    /* 1. Biru */
+    .card-color-0 { background: #e3f2fd; border-left-color: #2196f3; }
+    .card-color-0 .icon-wrapper { background: #bbdefb; }
+    .card-color-0 .label { color: #0d47a1; }
+    .card-color-0 .sub { color: #1565c0; }
+    
+    /* 2. Oranye (PMA style) */
+    .card-color-1 { background: #fff3e0; border-left-color: #ff9800; }
+    .card-color-1 .icon-wrapper { background: #ffe0b2; }
+    .card-color-1 .label { color: #e65100; }
+    .card-color-1 .sub { color: #ef6c00; }
+    
+    /* 3. Hijau */
+    .card-color-2 { background: #e8f5e9; border-left-color: #4caf50; }
+    .card-color-2 .icon-wrapper { background: #c8e6c9; }
+    .card-color-2 .label { color: #1b5e20; }
+    .card-color-2 .sub { color: #2e7d32; }
+    
+    /* 4. Ungu */
+    .card-color-3 { background: #f3e5f5; border-left-color: #9c27b0; }
+    .card-color-3 .icon-wrapper { background: #e1bee7; }
+    .card-color-3 .label { color: #4a148c; }
+    .card-color-3 .sub { color: #6a1b9a; }
+    
+    /* 5. Pink */
+    .card-color-4 { background: #fce4ec; border-left-color: #e91e63; }
+    .card-color-4 .icon-wrapper { background: #f8bbd0; }
+    .card-color-4 .label { color: #880e4f; }
+    .card-color-4 .sub { color: #ad1457; }
+    
+    /* 6. Cyan */
+    .card-color-5 { background: #e0f7fa; border-left-color: #00bcd4; }
+    .card-color-5 .icon-wrapper { background: #b2ebf2; }
+    .card-color-5 .label { color: #006064; }
+    .card-color-5 .sub { color: #00838f; }
+    
+    /* 7. Kuning */
+    .card-color-6 { background: #fffde7; border-left-color: #fbc02d; }
+    .card-color-6 .icon-wrapper { background: #fff59d; }
+    .card-color-6 .label { color: #f57f17; }
+    .card-color-6 .sub { color: #f9a825; }
+    
+    /* 8. Coral/Merah */
+    .card-color-7 { background: #fbe9e7; border-left-color: #ff5722; }
+    .card-color-7 .icon-wrapper { background: #ffccbc; }
+    .card-color-7 .label { color: #bf360c; }
+    .card-color-7 .sub { color: #d84315; }
+    
+    .menu-grid-item .menu-actions { position: absolute; top: -8px; right: -8px; display: none; gap: 4px; background: white; border-radius: 20px; padding: 4px 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; }
+    .menu-grid-item:hover .menu-actions { display: flex; }
+    .menu-actions button { border: none; background: transparent; font-size: 14px; cursor: pointer; padding: 2px 6px; border-radius: 12px; transition: 0.2s; }
+    .menu-actions .btn-edit { color: #1e3a6f; }
+    .menu-actions .btn-edit:hover { background: #eef4fe; }
+    .menu-actions .btn-delete { color: #d32f2f; }
+    .menu-actions .btn-delete:hover { background: #fde8e8; }
+
+    /* ===== ADMIN PANEL ===== */
+    .admin-panel { background: #f8faff; border-radius: 20px; padding: 20px 18px; margin: 16px 0 20px; border: 2px solid #dce3ed; display: none; }
+    .admin-panel.show { display: block; }
+    .admin-panel h3 { font-size: 16px; color: #1e3a6f; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .admin-panel h3 .close-admin { margin-left: auto; cursor: pointer; font-size: 20px; color: #7a8ea8; transition: 0.2s; }
+    .admin-panel h3 .close-admin:hover { color: #d32f2f; transform: scale(1.1); }
+    .admin-form { display: flex; flex-direction: column; gap: 10px; }
+    .admin-form .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .admin-form input { flex: 1; padding: 10px 14px; border: 1px solid #dce3ed; border-radius: 12px; font-size: 14px; min-width: 120px; }
+    .admin-form input:focus { outline: 2px solid #1e3a6f; border-color: transparent; }
+    .admin-form .btn-add { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: fit-content; }
+    .admin-form .btn-add:hover { background: #388e3c; }
+    .admin-menu-list { margin-top: 14px; max-height: 280px; overflow-y: auto; }
+    .admin-menu-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: white; border-radius: 10px; margin-bottom: 6px; border: 1px solid #eef2f8; gap: 10px; }
+    .admin-menu-item .info { display: flex; flex-direction: column; gap: 2px; font-size: 13px; flex: 1; min-width: 0; }
+    .admin-menu-item .info .admin-label { font-weight: 600; color: #1a2e4a; }
+    .admin-menu-item .info .admin-url { font-size: 11px; color: #7a8ea8; word-break: break-all; }
+    .admin-menu-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .admin-menu-item .actions button { border: none; background: transparent; font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: 0.2s; }
+    .admin-menu-item .actions .admin-edit { color: #1e3a6f; }
+    .admin-menu-item .actions .admin-edit:hover { background: #eef4fe; }
+    .admin-menu-item .actions .admin-delete { color: #d32f2f; }
+    .admin-menu-item .actions .admin-delete:hover { background: #fde8e8; }
+    .empty-menu { text-align: center; color: #7a8ea8; padding: 20px 0; font-size: 14px; }
+
+    /* ===== LOGIN MODAL ===== */
+    .login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); padding: 16px; }
+    .login-overlay.show { display: flex; }
+    .login-modal { background: white; border-radius: 28px; padding: 32px 28px; max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .login-modal h2 { font-size: 22px; color: #1e3a6f; margin-bottom: 6px; text-align: center; }
+    .login-modal .subtitle { text-align: center; color: #7a8ea8; font-size: 14px; margin-bottom: 24px; }
+    .login-modal .form-group { margin-bottom: 16px; }
+    .login-modal .form-group label { display: block; font-size: 13px; font-weight: 600; color: #1a2e4a; margin-bottom: 4px; }
+    .login-modal .form-group input { width: 100%; padding: 12px 16px; border: 2px solid #eef2f8; border-radius: 14px; font-size: 15px; transition: 0.2s; }
+    .login-modal .form-group input:focus { outline: none; border-color: #1e3a6f; box-shadow: 0 0 0 3px rgba(30, 58, 111, 0.1); }
+    .login-modal .btn-login { width: 100%; padding: 14px; background: #8e24aa; color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .login-modal .btn-login:hover { background: #7b1fa2; }
+    .login-modal .btn-login:active { transform: scale(0.97); }
+    .login-modal .login-error { color: #d32f2f; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+    .login-modal .login-error.show { display: block; }
+    .login-modal .login-footer { text-align: center; margin-top: 16px; font-size: 12px; color: #a0b2c9; }
+
+    /* ===== BOTTOM NAVIGATION ===== */
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: white;
+      border-top: 1px solid #e6ecf5;
+      padding: 10px 0 8px;
+      margin: 24px -16px 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .bottom-nav .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      color: #7a8ea8;
+      cursor: pointer;
+      transition: 0.2s;
+      text-decoration: none;
+      gap: 2px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      flex: 1;
+      max-width: 100px;
+    }
+    .bottom-nav .nav-item:hover { color: #1e3a6f; background: #f0f5fe; }
+    .bottom-nav .nav-item .nav-icon { font-size: 20px; }
+    .bottom-nav .nav-item span:last-child { font-size: 10px; }
+    .bottom-nav .nav-item.active { color: #1e3a6f; font-weight: 600; }
+    .bottom-nav .nav-item:last-child.active { color: #8e24aa; }
+
+    .footer-note { text-align: center; font-size: 11px; color: #a0b2c9; padding: 16px 0 4px; }
+
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e3a6f;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 999;
+      max-width: 90%;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ===== INSTALL PROMPT BANNER ===== */
+    .install-banner {
+      background: linear-gradient(135deg, #8e24aa, #6a1b9a);
+      color: white;
+      padding: 14px 18px;
+      border-radius: 16px;
+      margin: 0 0 16px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(142, 36, 170, 0.3);
+      animation: slideDown 0.4s ease;
+    }
+    .install-banner.show { display: flex; }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .install-banner .banner-text { flex: 1; font-size: 13px; font-weight: 500; }
+    .install-banner .banner-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .install-banner .btn-banner {
+      background: white;
+      color: #8e24aa;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .install-banner .btn-close-banner {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0.8;
+      padding: 0 4px;
+    }
+    .install-banner .btn-close-banner:hover { opacity: 1; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (min-width: 600px) {
+      .app-container { padding: 20px; }
+      .app-title { font-size: 28px; }
+      .hero-card { padding: 24px 22px; }
+      .hero-card h2 { font-size: 20px; }
+      .menu-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+      .menu-grid-item { min-height: 120px; padding: 18px 8px 14px; }
+      .menu-grid-item .icon-wrapper { width: 50px; height: 50px; font-size: 24px; }
+      .menu-grid-item .label { font-size: 12px; }
+    }
+
+    @media (min-width: 1024px) {
+      body { padding: 20px; }
+      .app-container { max-width: 1100px; padding: 28px 32px; border-radius: 24px; min-height: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.12); }
+      .app-title { font-size: 32px; }
+      .hero-card { padding: 28px 32px; border-radius: 28px; }
+      .hero-card h2 { font-size: 24px; }
+      .menu-grid { grid-template-columns: repeat(5, 1fr); gap: 16px; }
+      .menu-grid-item { min-height: 140px; padding: 22px 10px 16px; }
+      .menu-grid-item .icon-wrapper { width: 56px; height: 56px; font-size: 26px; }
+      .menu-grid-item .label { font-size: 13px; }
+      .bottom-nav { margin: 28px -32px 0; border-radius: 0 0 24px 24px; }
+    }
+
+    @media (min-width: 1400px) {
+      .app-container { max-width: 1280px; }
+      .menu-grid { grid-template-columns: repeat(6, 1fr); }
+    }
+
+    @media (max-width: 400px) {
+      .app-container { padding: 12px; }
+      .app-title { font-size: 22px; }
+      .menu-grid { gap: 8px; }
+      .menu-grid-item { min-height: 95px; padding: 12px 4px 10px; }
+      .menu-grid-item .icon-wrapper { width: 38px; height: 38px; font-size: 18px; }
+      .menu-grid-item .label { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-container" role="main" id="appContainer">
+  <header class="app-header">
+    <div class="app-title">SIGULAS</div>
+    <div class="header-actions">
+      <button class="btn-admin" id="adminToggleBtn">⚙️ Admin</button>
+      <button class="btn-refresh" id="refreshBtn" title="Refresh halaman">🔄</button>
+      <button class="btn-install" id="installBtn">📲 Install</button>
+    </div>
+  </header>
+
+  <!-- Banner Install PWA -->
+  <div class="install-banner" id="installBanner">
+    <div class="banner-text">
+      <strong>📱 Pasang di HP Anda!</strong>
+      Akses SIGULAS seperti aplikasi native
+    </div>
+    <button class="btn-banner" id="bannerInstallBtn">Pasang</button>
+    <button class="btn-close-banner" id="closeBannerBtn">✕</button>
+  </div>
+
+  <div class="hero-card" id="heroCard">
+    <div class="time-badge" id="realTimeClock">⏰ 00.00</div>
+    <h2>Absen siswa ditutup setiap pukul 10.00 ...</h2>
+    <p>Pastikan absensi siswa selesai sebelum batas waktu.</p>
+    <a href="#" class="btn-hero" data-url="https://sigulas.demo/absen-siswa" data-label="Absen Siswa">📝 Ke Absen Siswa</a>
+  </div>
+
+  <div class="admin-panel" id="adminPanel">
+    <h3>⚙️ Dashboard Admin <span class="close-admin" id="closeAdmin">✕</span></h3>
+    <div class="admin-form">
+      <div class="form-row">
+        <input type="text" id="menuIcon" placeholder="Icon (emoji)" value="📌">
+        <input type="text" id="menuLabel" placeholder="Nama Menu" value="Menu Baru">
+      </div>
+      <div class="form-row">
+        <input type="text" id="menuUrl" placeholder="URL (contoh: https://..." value="https://sigulas.demo/baru">
+        <input type="text" id="menuSub" placeholder="Sub (opsional)" value="deskripsi">
+      </div>
+      <button class="btn-add" id="addMenuBtn">➕ Tambah Menu</button>
+    </div>
+    <div class="admin-menu-list" id="adminMenuList"></div>
+  </div>
+
+  <div class="menu-grid" id="menuGrid"></div>
+
+  <div class="bottom-nav">
+    <a href="#" class="nav-item active" data-url="https://sigulas.demo/beranda" data-label="Beranda">
+      <span class="nav-icon">🏠</span><span>Beranda</span>
+    </a>
+    <a href="#" class="nav-item" data-url="https://sigulas.demo/absen-siswa" data-label="Absen">
+      <span class="nav-icon">📝</span><span>Absen</span>
+    </a>
+    <a href="#" class="nav-item" data-url="https://sigulas.demo/rekap" data-label="Rekap">
+      <span class="nav-icon">📊</span><span>Rekap</span>
+    </a>
+    <a href="#" class="nav-item" data-url="https://sigulas.demo/pma" data-label="PMA">
+      <span class="nav-icon">📈</span><span>PMA</span>
+    </a>
+    <a href="#" class="nav-item" data-url="https://sigulas.demo/profil" data-label="Profil">
+      <span class="nav-icon">👤</span><span>Profil</span>
+    </a>
+  </div>
+
+  <div class="footer-note">SIGULAS v1.0 • Sistem Informasi Guru</div>
+</div>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-modal">
+    <h2>🔐 Login Admin</h2>
+    <p class="subtitle">Masukkan kredensial untuk mengakses dashboard</p>
+    <div class="form-group">
+      <label for="loginUsername">Username</label>
+      <input type="text" id="loginUsername" placeholder="Masukkan username">
+    </div>
+    <div class="form-group">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="Masukkan password">
+    </div>
+    <button class="btn-login" id="loginBtn">🔓 Login</button>
+    <div class="login-error" id="loginError">❌ Username atau password salah!</div>
+    <div class="login-footer">Hubungi pengembang sistem untuk mendapatkan akses.</div>
+  </div>
+</div>
+
+<div id="toast" class="toast">🔗 Membuka...</div>
+
+<script>
+  // ============================================
+  // SERVICE WORKER - PWA SUPPORT (INLINE)
+  // ============================================
+  if ('serviceWorker' in navigator) {
+    // Cek apakah halaman ini sedang dijalankan sebagai service worker
+    const isServiceWorkerMode = new URLSearchParams(window.location.search).get('sw') === '1';
+    
+    if (isServiceWorkerMode) {
+      // Jalankan sebagai Service Worker
+      const CACHE_NAME = 'sigulas-v1';
+      const urlsToCache = [
+        './',
+        './?sw=1'
+      ];
+      
+      self.addEventListener('install', event => {
+        event.waitUntil(
+          caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+        );
+        self.skipWaiting();
+      });
+      
+      self.addEventListener('activate', event => {
+        event.waitUntil(
+          caches.keys().then(names => 
+            Promise.all(
+              names.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
+            )
+          )
+        );
+        self.clients.claim();
+      });
+      
+      self.addEventListener('fetch', event => {
+        event.respondWith(
+          caches.match(event.request).then(response => {
+            return response || fetch(event.request).then(fetchResponse => {
+              return caches.open(CACHE_NAME).then(cache => {
+                if (event.request.method === 'GET') {
+                  cache.put(event.request, fetchResponse.clone());
+                }
+                return fetchResponse;
+              });
+            });
+          }).catch(() => caches.match('./'))
+        );
+      });
+    } else {
+      // Daftarkan halaman ini sendiri sebagai Service Worker
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register(window.location.pathname + '?sw=1')
+          .then(reg => {
+            console.log('✅ Service Worker terdaftar:', reg.scope);
+          })
+          .catch(err => {
+            console.log('⚠️ SW registration gagal (butuh HTTPS):', err);
+          });
+      });
+    }
+  }
+
+  // ============================================
+  // APLIKASI UTAMA
+  // ============================================
+  (function() {
+    const toast = document.getElementById('toast');
+    let toastTimer = null;
+    let editingIndex = null;
+    let isLoggedIn = false;
+    let deferredPrompt = null;
+
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'admin123';
+
+    let menuData = [
+      { icon: '📝', label: 'Absensi Siswa', url: 'https://sigulas.demo/absensi-siswa', sub: '' },
+      { icon: '📊', label: 'Rekap Absensi Siswa', url: 'https://sigulas.demo/rekap-absensi', sub: '' },
+      { icon: '📋', label: 'Absensi Rapat Guru', url: 'https://sigulas.demo/absen-rapat', sub: '' },
+      { icon: '👨‍🏫', label: 'Wali Kelas', url: 'https://sigulas.demo/wali-kelas', sub: '' },
+      { icon: '🌐', label: 'Portal GTK', url: 'https://sigulas.demo/portal-gtk', sub: '' },
+      { icon: '📌', label: 'Tugas Guru Izin', url: 'https://sigulas.demo/tugas-guru-izin', sub: '' },
+      { icon: '👀', label: 'Lihat Tugas Guru Izin', url: 'https://sigulas.demo/lihat-tugas-guru-izin', sub: '' },
+      { icon: '📈', label: 'PMA', url: 'https://sigulas.demo/pma', sub: 'Peningkatan Mutu Akademik' },
+      { icon: '🌿', label: 'Galeri Adiwiyata', url: 'https://sigulas.demo/galeri-adiwiyata', sub: '' },
+      { icon: '🖼️', label: 'Galeri Kegiatan', url: 'https://sigulas.demo/galeri-kegiatan', sub: '' },
+      { icon: '📄', label: 'SKPBM TA 2026-2027', url: 'https://sigulas.demo/skpbm', sub: '' }
+    ];
+
+    // ===== PWA INSTALL HANDLER =====
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Tampilkan tombol install di header
+      document.getElementById('installBtn').classList.add('show');
+      // Tampilkan banner install
+      document.getElementById('installBanner').classList.add('show');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      document.getElementById('installBtn').classList.remove('show');
+      document.getElementById('installBanner').classList.remove('show');
+      showToast('✅ SIGULAS berhasil dipasang!');
+    });
+
+    // Cek apakah sudah diinstall (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+      document.getElementById('installBtn').style.display = 'none';
+      document.getElementById('installBanner').style.display = 'none';
+    }
+
+    async function triggerInstall() {
+      if (!deferredPrompt) {
+        showToast('ℹ️ Fitur install hanya tersedia di browser yang didukung (Chrome/Edge di Android)');
+        return;
+      }
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('✅ Sedang memasang SIGULAS...');
+      }
+      deferredPrompt = null;
+    }
+
+    document.getElementById('installBtn').addEventListener('click', triggerInstall);
+    document.getElementById('bannerInstallBtn').addEventListener('click', triggerInstall);
+    document.getElementById('closeBannerBtn').addEventListener('click', () => {
+      document.getElementById('installBanner').classList.remove('show');
+    });
+
+    // ===== RENDER MENU DENGAN WARNA BERAGAM =====
+    function renderMenus() {
+      const grid = document.getElementById('menuGrid');
+      const adminList = document.getElementById('adminMenuList');
+      
+      grid.innerHTML = menuData.map((item, index) => {
+        const colorClass = `card-color-${index % 8}`;
+        const subHtml = item.sub ? `<span class="sub">${item.sub}</span>` : '';
+        const actionButtons = isLoggedIn ? `
+          <div class="menu-actions">
+            <button class="btn-edit" data-index="${index}" title="Edit">✏️</button>
+            <button class="btn-delete" data-index="${index}" title="Hapus">🗑️</button>
+          </div>
+        ` : '';
+        return `
+          <a href="#" class="menu-grid-item ${colorClass}" data-url="${item.url}" data-label="${item.label}" data-index="${index}">
+            <div class="icon-wrapper"><span class="icon">${item.icon}</span></div>
+            <span class="label">${item.label}</span>
+            ${subHtml}
+            ${actionButtons}
+          </a>
+        `;
+      }).join('');
+
+      if (isLoggedIn) {
+        if (menuData.length === 0) {
+          adminList.innerHTML = `<div class="empty-menu">Belum ada menu. Tambahkan menu baru!</div>`;
+        } else {
+          adminList.innerHTML = menuData.map((item, index) => `
+            <div class="admin-menu-item">
+              <div class="info">
+                <span class="admin-label">${item.icon} ${item.label}</span>
+                <span class="admin-url">${item.url}</span>
+                ${item.sub ? `<span style="font-size:11px;color:#7a8ea8;">${item.sub}</span>` : ''}
+              </div>
+              <div class="actions">
+                <button class="admin-edit" data-index="${index}" title="Edit">✏️</button>
+                <button class="admin-delete" data-index="${index}" title="Hapus">🗑️</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } else {
+        adminList.innerHTML = `<div class="empty-menu">🔒 Login untuk mengelola menu</div>`;
+      }
+
+      attachMenuEvents();
+      if (isLoggedIn) attachAdminEvents();
+    }
+
+    function attachMenuEvents() {
+      document.querySelectorAll('.menu-grid-item').forEach(link => {
+        link.addEventListener('click', function(e) {
+          if (e.target.closest('.menu-actions')) return;
+          e.preventDefault();
+          handleMenuClick(this.getAttribute('data-url'), this.getAttribute('data-label'));
+        });
+      });
+
+      if (isLoggedIn) {
+        document.querySelectorAll('.menu-actions .btn-edit').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            openAdminPanel(); startEditing(parseInt(this.getAttribute('data-index')));
+          });
+        });
+        document.querySelectorAll('.menu-actions .btn-delete').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            const index = parseInt(this.getAttribute('data-index'));
+            if (confirm(`Hapus menu "${menuData[index].label}"?`)) {
+              menuData.splice(index, 1); renderMenus(); showToast(`🗑️ Menu dihapus`);
+            }
+          });
+        });
+      }
+    }
+
+    function attachAdminEvents() {
+      document.querySelectorAll('.admin-menu-item .admin-edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+          openAdminPanel(); startEditing(parseInt(this.getAttribute('data-index')));
+        });
+      });
+      document.querySelectorAll('.admin-menu-item .admin-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const index = parseInt(this.getAttribute('data-index'));
+          if (confirm(`Hapus menu "${menuData[index].label}"?`)) {
+            menuData.splice(index, 1); renderMenus(); showToast(`🗑️ Menu dihapus`);
+          }
+        });
+      });
+    }
+
+    function handleMenuClick(url, label) {
+      if (!url || url === '#' || url.includes('sigulas.demo')) {
+        showToast('⚠️ Link belum diatur dengan benar');
+        return;
+      }
+      showToast(`🔗 Membuka: ${label}...`);
+      window.open(url, '_blank');
+    }
+
+    function openAdminPanel() {
+      if (!isLoggedIn) { showLoginModal(); return; }
+      document.getElementById('adminPanel').classList.add('show');
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('adminPanel').classList.remove('show');
+      editingIndex = null;
+      document.getElementById('menuIcon').value = '📌';
+      document.getElementById('menuLabel').value = 'Menu Baru';
+      document.getElementById('menuUrl').value = 'https://sigulas.demo/baru';
+      document.getElementById('menuSub').value = '';
+      document.getElementById('addMenuBtn').textContent = '➕ Tambah Menu';
+    }
+
+    function startEditing(index) {
+      const item = menuData[index];
+      editingIndex = index;
+      document.getElementById('menuIcon').value = item.icon || '📌';
+      document.getElementById('menuLabel').value = item.label || '';
+      document.getElementById('menuUrl').value = item.url || '';
+      document.getElementById('menuSub').value = item.sub || '';
+      document.getElementById('addMenuBtn').textContent = '💾 Simpan Perubahan';
+      document.querySelector('.admin-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showLoginModal() {
+      document.getElementById('loginOverlay').classList.add('show');
+      document.getElementById('loginError').classList.remove('show');
+    }
+
+    function hideLoginModal() {
+      document.getElementById('loginOverlay').classList.remove('show');
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('realTimeClock').textContent = `⏰ ${hours}.${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    document.getElementById('adminToggleBtn').addEventListener('click', () => {
+      if (isLoggedIn) {
+        document.getElementById('adminPanel').classList.contains('show') ? closeAdminPanel() : openAdminPanel();
+      } else {
+        showLoginModal();
+      }
+    });
+
+    document.getElementById('closeAdmin').addEventListener('click', closeAdminPanel);
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      showToast('🔄 Memuat ulang...');
+      setTimeout(() => window.location.reload(), 500);
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const user = document.getElementById('loginUsername').value;
+      const pass = document.getElementById('loginPassword').value;
+      if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+        isLoggedIn = true;
+        hideLoginModal();
+        document.getElementById('adminToggleBtn').classList.add('logged-in');
+        document.getElementById('adminToggleBtn').innerHTML = '👤 Admin';
+        renderMenus(); openAdminPanel(); showToast('✅ Login berhasil!');
+      } else {
+        document.getElementById('loginError').classList.add('show');
+      }
+    });
+
+    document.getElementById('addMenuBtn').addEventListener('click', () => {
+      const icon = document.getElementById('menuIcon').value || '📌';
+      const label = document.getElementById('menuLabel').value || 'Menu Baru';
+      const url = document.getElementById('menuUrl').value || '#';
+      const sub = document.getElementById('menuSub').value || '';
+
+      if (editingIndex !== null) {
+        menuData[editingIndex] = { icon, label, url, sub };
+        editingIndex = null;
+        document.getElementById('addMenuBtn').textContent = '➕ Tambah Menu';
+        showToast('✅ Menu diperbarui');
+      } else {
+        menuData.push({ icon, label, url, sub });
+        showToast('✅ Menu ditambahkan');
+      }
+      
+      document.getElementById('menuIcon').value = '📌';
+      document.getElementById('menuLabel').value = 'Menu Baru';
+      document.getElementById('menuUrl').value = 'https://sigulas.demo/baru';
+      document.getElementById('menuSub').value = '';
+      renderMenus();
+    });
+
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('.bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        handleMenuClick(this.getAttribute('data-url'), this.getAttribute('data-label'));
+      });
+    });
+
+    document.querySelector('.hero-card .btn-hero').addEventListener('click', function(e) {
+      e.preventDefault();
+      handleMenuClick(this.getAttribute('data-url'), this.getAttribute('data-label'));
+    });
+
+    document.getElementById('loginOverlay').addEventListener('click', function(e) {
+      if (e.target === this) hideLoginModal();
+    });
+
+    renderMenus();
+  })();
+</script>
+</body>
+</html>
