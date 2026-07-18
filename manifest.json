@@ -2,7 +2,7 @@
   "name": "SIGULAS - Sistem Informasi Guru",
   "short_name": "SIGULAS",
   "description": "Sistem Informasi Guru untuk manajemen sekolah",
-  "start_url": "./",
+  "start_url": "https://imamsafawi.github.io/sigulas/",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
